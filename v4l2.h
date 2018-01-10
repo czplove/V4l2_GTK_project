@@ -1,9 +1,9 @@
 #ifndef _V4L2_H
 #define _V4L2_H
-#include <linux/videodev.h>
+//-#include <linux/videodev.h>
 #include <linux/videodev2.h>
 
-#define DEBUG_CAM	1	
+//-#define DEBUG_CAM	0	
 struct buffer {
         void *  start;
         size_t  length;
@@ -18,12 +18,12 @@ struct camera {
 	int display_depth;
 	int image_size;
    	int frame_number;
-	struct video_capability video_cap;
+	//-struct video_capability video_cap;
 	struct v4l2_capability v4l2_cap;
 	struct v4l2_cropcap v4l2_cropcap;
 	struct v4l2_format v4l2_fmt;
-	struct video_window video_win;
-	struct video_picture video_pic;
+	//-struct video_window video_win;
+	//-struct video_picture video_pic;
 	struct buffer *buffers;
 	unsigned char *rgbbuf;
 };

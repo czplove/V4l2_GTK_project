@@ -163,13 +163,13 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 	open_camera(cam);
-	get_cam_cap(cam);
-	get_cam_pic(cam);
-	get_cam_win(cam);
-	cam->video_win.width = cam->width;
-	cam->video_win.height = cam->height;
-	set_cam_win(cam);
-	get_cam_win(cam);	
+	//-get_cam_cap(cam);
+	//-get_cam_pic(cam);
+	//-get_cam_win(cam);
+	//-cam->video_win.width = cam->width;
+	//-cam->video_win.height = cam->height;
+	//-set_cam_win(cam);
+	//-get_cam_win(cam);	
         init_camera(cam);
         start_capturing (cam);
 

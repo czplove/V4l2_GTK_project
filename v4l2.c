@@ -301,9 +301,10 @@ void init_camera(struct camera *cam)
 	init_mmap (cam);
 
 }
+#if 0
 void get_cam_cap(struct camera  *cam)
 {
-	if (xioctl(cam->fd, VIDIOCGCAP, &cam->video_cap) == -1) {
+	if (xioctl(cam->fd, VIDIOC_QUERYCAP, &cam->video_cap) == -1) {
 		fprintf(stderr, "VIDIOCGCAP  --  could not get camera capabilities, exiting.....\n");
 		exit(0);
 	}
@@ -333,6 +334,7 @@ void get_cam_cap(struct camera  *cam)
 		printf("min height = %d\n", cam->video_cap.minheight);
 #endif
 }
+#endif
 #ifdef DEBUG_CAM
 void print_palette(int p)
 {
@@ -400,6 +402,7 @@ void print_palette(int p)
 	}
 }
 #endif
+#if 0
 void get_cam_pic(struct camera *cam)
 {
 	if (ioctl(cam->fd, VIDIOCGPICT, &cam->video_pic) == -1) {
@@ -417,6 +420,7 @@ void get_cam_pic(struct camera *cam)
 		print_palette(cam->video_pic.palette);
 #endif
 }
+
 void set_cam_pic(struct camera * cam)
 {
 	if(ioctl(cam->fd, VIDIOCSPICT, &cam->video_pic) == -1) {
@@ -424,6 +428,8 @@ void set_cam_pic(struct camera * cam)
 		exit(0);
 	}
 }
+#endif
+#if 0
 void get_cam_win(struct camera *cam)
 {
 	if(ioctl(cam->fd, VIDIOCGWIN, &cam->video_win) == -1) {
@@ -449,4 +455,4 @@ void set_cam_win(struct camera *cam)
 		exit(0);
 	}
 }
-
+#endif
