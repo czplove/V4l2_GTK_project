@@ -1,35 +1,22 @@
-# ------------------------------------------------------------------
-# MQTT Client makefile
-# ------------------------------------------------------------------
-# Author:    taida
-# Copyright: NXP B.V. 2016. All rights reserved
-# ------------------------------------------------------------------
-#-这个是最后一个makefile了
+CC = gcc
+LD = ld
 
-GTK_CFLAGS = $(shell pkg-config --cflags gtk+-2.0)
-GTK_LIBS = $(shell pkg-config --libs gtk+-2.0)
+CFLAGS := -Wall -O2 
+CFLAGS += -I/usr/include/gtk-2.0 
+CFLAGS += -I/usr/include/glib-2.0
+CFLAGS += -I/usr/lib/glib-2.0/include
+CFLAGS += -I/usr/lib/gtk-2.0/include
+CFLAGS += -I/usr/include/cairo
+CFLAGS += -I/usr/include/pango-1.0
+CFLAGS += -I/usr/include/atk-1.0
+CFLAGS += -I/usr/include/gdk-pixbuf-2.0
 
-#-LDFLAGS += -lpthread
-#CC=arm-none-linux-gnueabi-gcc
-CC=gcc
+OBJS := main.o yuv422_rgb.o v4l2.o
+all: $(OBJS)
+	$(CC) `pkg-config --cflags --libs gtk+-2.0`  -o camera_test $(OBJS)
 
-TARGET = v4l2t
-#-包含头文件的地方
-INCLUDES = -I.
-OBJECTS = main.o
-
-
-%.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) $(INCLUDES) -Wall -g -c $< -o $@ $(GTK_CFLAGS)
-
-all: clean build
-
-build: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET) $(GTK_LIBS)
-#	cp $(TARGET) ../../swupdate/images/usr/bin/
-
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 clean:
-	-rm -f $(OBJECTS)
-	-rm -f $(TARGET)
-#	-rm -f ../../swupdate/images/usr/bin/$(TARGET)
+	rm -rf *.o 
 
