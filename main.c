@@ -12,8 +12,13 @@ int w = 400;
 int h = 300;  
 
 /*
- 这个线程很简单，判断image_ready，如果被置1那么就调用gtk_widget_queue_draw函数，触发widget的‘expose-event’事件，从而执行相关处理函数。这个widget参数是gtk控件drawingarea,视频就是显示在这个控件上。在窗口初始化的时候定义了这个控件，并初始化了控件的'expose-event'事件的处理函数为on_darea_expose()，这个函数调用了GTK提供的RGB绘图函数gdk_draw_rgb_image（）将缓冲区的内容绘制到屏幕上。
-        在设备初始化之后，两个线程通过image_ready进行同步，视频采集进程默默的采集数据，每采回一帧数据，都会调用process_image，对数据进行处理，而process_image处理完数据后置位image_ready，然后视频显示线程将视频显示在屏幕上，同时清零image_ready，准备下一次转换。
+ 这个线程很简单，判断image_ready，如果被置1那么就调用gtk_widget_queue_draw函数，触发widget的‘expose-event’事件，
+ 从而执行相关处理函数。这个widget参数是gtk控件drawingarea,视频就是显示在这个控件上。在窗口初始化的时候定义了这个
+ 控件，并初始化了控件的'expose-event'事件的处理函数为on_darea_expose()，这个函数调用了GTK提供的RGB绘图函数
+ gdk_draw_rgb_image（）将缓冲区的内容绘制到屏幕上。
+        在设备初始化之后，两个线程通过image_ready进行同步，视频采集进程默默的采集数据，每采回一帧数据，都会调用
+        process_image，对数据进行处理，而process_image处理完数据后置位image_ready，然后视频显示线程将视频显示在
+        屏幕上，同时清零image_ready，准备下一次转换。
 */
 #if 0
 static void draw_thread(GtkWidget *widget)
@@ -155,9 +160,13 @@ int main(int argc, char **argv)
    
    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);    // 中央位置显示
    gtk_widget_set_size_request(window, 400, 300);          // 窗口最小大小
+   //  gtk_window_set_default_size(window,600,700);   
+   //-     gdk_window_maximize(window); 	//-目前使用这个出错
 //-   gtk_window_set_resizable(GTK_WINDOW(window), FALSE);    // 固定窗口的大小
 	GtkWidget *table = gtk_table_new(5, 5, TRUE);   // 表格布局容器
 	gtk_container_add(GTK_CONTAINER(window), table); // 容器加入窗口
+	
+	
 	
 	// button
 	GtkWidget *button = gtk_button_new_with_label("click me");      // 按钮
@@ -173,8 +182,14 @@ int main(int argc, char **argv)
    gtk_widget_show_all(window);	// 显示所有控件
    gtk_main();
     return 0;  
-}
+
   
-      
-      
+ 
+#if 0
+ 
+    
+#endif  
+
+}
+
    
