@@ -1,6 +1,7 @@
 #ifndef _V4L2_H
 #define _V4L2_H
 #include <linux/videodev.h>
+#include <linux/videodev2.h>
 
 #define DEBUG_CAM	1	
 struct buffer {
