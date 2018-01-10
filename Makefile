@@ -1,6 +1,8 @@
 CC = gcc
 LD = ld
 
+TARGET = camera_test
+
 CFLAGS := -Wall -O2 
 CFLAGS += -I/usr/include/gtk-2.0 
 CFLAGS += -I/usr/include/glib-2.0
@@ -13,10 +15,10 @@ CFLAGS += -I/usr/include/gdk-pixbuf-2.0
 
 OBJS := main.o yuv422_rgb.o v4l2.o
 all: $(OBJS)
-	$(CC)  -o camera_test $(OBJS)  `pkg-config --cflags --libs gtk+-2.0`
+	$(CC)  -o $(TARGET) $(OBJS)  `pkg-config --cflags --libs gtk+-2.0`
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<  `pkg-config --cflags --libs gtk+-2.0`
 clean:
-	rm -rf *.o 
+	rm -rf *.o $(TARGET)
 
