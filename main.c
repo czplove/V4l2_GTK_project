@@ -32,11 +32,63 @@ extern GtkWidget *drawingarea;
 
 extern void draw_thread(GtkWidget *widget);
 
+void fb_draw_point(void *memp, 
+	  			   unsigned int xres, unsigned int yres, 
+				   unsigned int x, unsigned int y, 
+				   unsigned int color)
+{
+   *((unsigned short int *)memp+xres*y+x)=color;	//-整个屏幕映射成了一块内存,实际操作驱动去完成
+}
 
 void process_image (guchar *p, struct camera *cam)
 {
 	
-	yuv422_rgb24(p, cam->rgbbuf, cam->width, cam->height);
+	//-yuv422_rgb24(p, cam->rgbbuf, cam->width, cam->height);
+	int k=0, i=0, j=0;
+	//-int col[] = {0xffffffff,0x00000000,~0x1f,0x0000f800,0x7e0,0x1f};
+	unsigned short int col[] = {0xffff,0x0000,~0x1f,0xf800,0x7e0,0x1f};
+	
+	for(k = 0; k<1600; k++)
+	{
+	   printf("%d:col[%d] = 0x%x",k,k%5,col[k%5]);
+	   /*
+			0:col[0] = 0xffffffff		白色
+			1:col[1] = 0x0				黑色
+			2:col[2] = 0xffffffe0		黄色
+			3:col[3] = 0xf800			红色
+			4:col[4] = 0x7e0			绿纯色
+			
+			//-unsigned short int
+			0:col[0] = 0xffff
+			1:col[1] = 0x0
+			2:col[2] = 0xffe0
+			3:col[3] = 0xf800
+			4:col[4] = 0x7e0
+	   */
+
+	   //-color = 1<<k;
+	   
+	   for(j=0; j<cam->height - 1; j++){	//-全屏底色是黑的
+		   for(i=0; i<cam->width - 1 ; i++) {
+				fb_draw_point(cam->rgbbuf,cam->width,cam->height,i,j,col[1]);
+		   }
+	   }
+
+#if 0
+	   for(j=0; j<vinfo.yres/2 - 1; j++){	//-验证屏幕和内存之间的对应关系
+		   for(i=0; i<vinfo.xres/2 - 1 ; i++) {
+				fb_draw_point(FrameBuffer,vinfo.xres,vinfo.yres,i,j,col[0]);
+		   }
+	   }
+#endif
+
+		for(i = cam->width / 2 - 50; i < cam->width / 2 + 50; i++) {
+	        for(j=cam->height / 2 - 50; j<cam->height / 2 + 50; j++) {
+	            fb_draw_point(cam->rgbbuf,cam->width,cam->height,i,j,col[k%5]);
+			}
+		}
+
+	}
 	image_ready = 1;
 }
 
@@ -49,6 +101,10 @@ static void capture_thread(struct camera *cam)	//视频采集线程
 		g_usleep(10000);
 
 		if (quit_flag == 1) break;
+			
+		//-测试窗口显示功能
+		process_image (cam->buffers[0].start, cam);
+		continue;
 
 		gdk_threads_enter();
 		fd_set fds;
