@@ -1,4 +1,4 @@
-#include <asm/types.h>          /* for videodev2.h */
+﻿#include <asm/types.h>          /* for videodev2.h */
 #include <fcntl.h>              /* low-level i/o */
 #include <unistd.h>
 #include <errno.h>
@@ -43,7 +43,7 @@ void open_camera(struct camera *cam)
         if (-1 == stat (cam->device_name, &st)) {
                 fprintf (stderr, "Cannot identify '%s': %d, %s\n",
                          cam->device_name, errno, strerror (errno));
-                exit (EXIT_FAILURE);
+                exit (EXIT_FAILURE);	//EXIT_FAILURE 可以作为exit()的参数来使用，表示没有成功地执行一个程序。
         }
 
         if (!S_ISCHR (st.st_mode)) {
@@ -116,13 +116,13 @@ void start_capturing(struct camera *cam)
         		buf.memory      = V4L2_MEMORY_MMAP;
         		buf.index       = i;
 
-        		if (-1 == xioctl (cam->fd, VIDIOC_QBUF, &buf))
+        		if (-1 == xioctl (cam->fd, VIDIOC_QBUF, &buf))	//-将缓冲帧放入队列
                     		errno_exit ("VIDIOC_QBUF");
 		}
 		
 		type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-		if (-1 == xioctl (cam->fd, VIDIOC_STREAMON, &type))
+		if (-1 == xioctl (cam->fd, VIDIOC_STREAMON, &type))	//-启动数据流
 			errno_exit ("VIDIOC_STREAMON");
 
 }
@@ -157,11 +157,11 @@ static void init_mmap(struct camera *cam)
 
         CLEAR (req);
 
-        req.count               = 4;
-        req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        req.memory              = V4L2_MEMORY_MMAP;
+        req.count               = 4;	//-缓存数量，也就是说在缓存队列里保持多少张照片
+        req.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;	//-数据流类型，必须永远是V4L2_BUF_TYPE_VIDEO_CAPTURE
+        req.memory              = V4L2_MEMORY_MMAP;	//-V4L2_MEMORY_MMAP 或 V4L2_MEMORY_USERPTR(区别是内存映射还是用户指针方式)
 
-	if (-1 == xioctl (cam->fd, VIDIOC_REQBUFS, &req)) {
+        if (-1 == xioctl (cam->fd, VIDIOC_REQBUFS, &req)) {	//-向设备申请缓冲区
                 if (EINVAL == errno) {
                         fprintf (stderr, "%s does not support "
                                  "memory mapping\n", cam->device_name);
@@ -177,7 +177,7 @@ static void init_mmap(struct camera *cam)
                 exit (EXIT_FAILURE);
         }
 
-        cam->buffers = calloc (req.count, sizeof (*(cam->buffers)));
+        cam->buffers = calloc (req.count, sizeof (*(cam->buffers)));	//-在内存的动态存储区中分配n个长度为size的连续空间
 
         if (!cam->buffers) {
                 fprintf (stderr, "Out of memory\n");
@@ -193,10 +193,10 @@ static void init_mmap(struct camera *cam)
                 buf.memory      = V4L2_MEMORY_MMAP;
                 buf.index       = n_buffers;
 
-                if (-1 == xioctl (cam->fd, VIDIOC_QUERYBUF, &buf))
+                if (-1 == xioctl (cam->fd, VIDIOC_QUERYBUF, &buf))	//-把VIDIOC_REQBUFS中分配的数据缓存转换成物理地址
                         errno_exit ("VIDIOC_QUERYBUF");
 
-                cam->buffers[n_buffers].length = buf.length;
+                cam->buffers[n_buffers].length = buf.length;	//-缓冲帧长度 
                 cam->buffers[n_buffers].start =
                         mmap (NULL /* start anywhere */,
                               buf.length,
@@ -221,7 +221,7 @@ void init_camera(struct camera *cam)
 	cropcap = &(cam->v4l2_cropcap);
 	fmt = &(cam->v4l2_fmt);
 
-        if (-1 == xioctl (cam->fd, VIDIOC_QUERYCAP, cap)) {
+        if (-1 == xioctl (cam->fd, VIDIOC_QUERYCAP, cap)) {	//-查询设备属性
                 if (EINVAL == errno) {
                         fprintf (stderr, "%s is no V4L2 device\n",
                                  cam->device_name);
@@ -231,19 +231,19 @@ void init_camera(struct camera *cam)
                 }
         }
 
-        if (!(cap->capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+        if (!(cap->capabilities & V4L2_CAP_VIDEO_CAPTURE)) {	//-The device supports the Video    Capture interface.
                 fprintf (stderr, "%s is no video capture device\n",
                          cam->device_name);
                 exit (EXIT_FAILURE);
         }
 
 
-	if (!(cap->capabilities & V4L2_CAP_STREAMING)) {
-		fprintf (stderr, "%s does not support streaming i/o\n",
-			 cam->device_name);
-		exit (EXIT_FAILURE);
-	}
-
+		if (!(cap->capabilities & V4L2_CAP_STREAMING)) {
+			fprintf (stderr, "%s does not support streaming i/o\n",
+				 cam->device_name);
+			exit (EXIT_FAILURE);
+		}
+		//-上面就是查询设备属性,然后判断是否满足要求
 #ifdef DEBUG_CAM
 	printf("\nVIDOOC_QUERYCAP\n");
 	printf("the camera driver is %s\n", cap->driver);
@@ -254,7 +254,7 @@ void init_camera(struct camera *cam)
         /* Select video input, video standard and tune here. */
 
 
-	CLEAR (*cropcap);
+		CLEAR (*cropcap);
 
         cropcap->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
@@ -285,7 +285,7 @@ void init_camera(struct camera *cam)
         fmt->fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
         fmt->fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
-        if (-1 == xioctl (cam->fd, VIDIOC_S_FMT, fmt))
+        if (-1 == xioctl (cam->fd, VIDIOC_S_FMT, fmt))	//-设置当前驱动的频捕获格式
                 errno_exit ("VIDIOC_S_FMT");
 
         /* Note VIDIOC_S_FMT may change width and height. */

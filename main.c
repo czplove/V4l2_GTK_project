@@ -61,7 +61,7 @@ static void draw_thread(GtkWidget *widget)
         }
 }
 
-static void capture_thread(struct camera *cam)
+static void capture_thread(struct camera *cam)	//视频采集线程
 {
 
 	for (;;) {
@@ -146,40 +146,40 @@ int main(int argc, char **argv)
 	 */
 	struct camera *cam;
 	
-	cam = malloc(sizeof(struct camera));
-	if (!cam) { 
+	cam = malloc(sizeof(struct camera));	//-申请的内存在不同线程中可以使用
+	if (!cam) {
 		printf("malloc camera failure!\n");
 		exit(1);
 	}
-        cam->device_name = "/dev/video0";
+	cam->device_name = "/dev/video0";
 	cam->buffers = NULL;
-	cam->width = 320;
+	cam->width = 320;	//我的摄像头质量比较差，最大分辨率只有320*240
 	cam->height = 240;
 	cam->display_depth = 3;  /* RGB24 */
 	cam->rgbbuf = malloc(cam->width * cam->height * cam->display_depth);
 
-	if (!cam->rgbbuf) { 
+	if (!cam->rgbbuf) {
 		printf("malloc rgbbuf failure!\n");
 		exit(1);
 	}
-	open_camera(cam);
-	//-get_cam_cap(cam);
-	//-get_cam_pic(cam);
-	//-get_cam_win(cam);
+	open_camera(cam);	//打开设备
+	//-get_cam_cap(cam);	//得到设备信息，如果定义了DEBUG_CAM，则会打印视频信息
+	//-get_cam_pic(cam);	//得到图形信息，同样如果定义了DEBUG_CAM，则会打印信息  
+	//-get_cam_win(cam);	//得到视频显示信息
 	//-cam->video_win.width = cam->width;
 	//-cam->video_win.height = cam->height;
-	//-set_cam_win(cam);
-	//-get_cam_win(cam);	
-        init_camera(cam);
-        start_capturing (cam);
+	//-set_cam_win(cam);	//设置图像大小，视频显示信息中包括摄像头支持的最大分辨率以及最小分辨率，这个可以设置，我设置的是320×240,当然也可以设置成其他，不过只能设置成特定的一些值  
+	//-get_cam_win(cam);	//显示设置之后的视频显示信息，确定设置成功
+        init_camera(cam);	//初始化设备，这个函数包括很多有关v4l2的操作 
+        start_capturing (cam);	//打开视频采集 
 
-	gtk_window_init(argc,argv,cam);
-
+	gtk_window_init(argc,argv,cam);	//初始化图形显示
+	//建立线程 
 	g_thread_create((GThreadFunc)draw_thread, drawingarea, FALSE, NULL);
 	g_thread_create((GThreadFunc)capture_thread, cam, FALSE, NULL);
 
 	gdk_threads_enter();
-	gtk_main();
+	gtk_main();	//进入主循环之后，两个线程开始工作
 	gdk_threads_leave();
   	return 0;
 }
