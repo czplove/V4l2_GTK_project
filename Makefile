@@ -13,7 +13,7 @@ CFLAGS += -I/usr/include/pango-1.0
 CFLAGS += -I/usr/include/atk-1.0
 CFLAGS += -I/usr/include/gdk-pixbuf-2.0
 
-OBJS := main.o yuv422_rgb.o v4l2.o
+OBJS := main.o yuv422_rgb.o v4l2.o window.o
 all: $(OBJS)
 	$(CC)  -o $(TARGET) $(OBJS)  `pkg-config --cflags --libs gtk+-2.0`
 
