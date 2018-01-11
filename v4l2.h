@@ -4,6 +4,9 @@
 #include <linux/videodev2.h>
 
 //-#define DEBUG_CAM	0	
+//-#define RUN_CAM
+#define RUN_SHOW
+
 struct buffer {
         void *  start;
         size_t  length;

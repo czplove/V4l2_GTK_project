@@ -41,17 +41,18 @@ static gboolean quit_capture (GtkWidget *widget,
 
 void process_image (guchar *p, struct camera *cam)
 {
-	image_ready = 1;
+	
 	yuv422_rgb24(p, cam->rgbbuf, cam->width, cam->height);
+	image_ready = 1;
 }
 
 static void draw_thread(GtkWidget *widget)
 {
         for(;;) {
                 g_usleep(10000);
-		if (quit_flag == 1) break;
+                if (quit_flag == 1) break;
                 gdk_threads_enter();
-                if(image_ready) {
+                if(image_ready) {	//-数据准备好了就刷新
                         gtk_widget_queue_draw(GTK_WIDGET (widget));
                 }
                 else {
@@ -81,7 +82,7 @@ static void capture_thread(struct camera *cam)	//视频采集线程
 		tv.tv_sec = 2;
 		tv.tv_usec = 0;
 
-		r = select (cam->fd + 1, &fds, NULL, NULL, &tv);
+		r = select (cam->fd + 1, &fds, NULL, NULL, &tv);	//-判断设备是否可读，这是非阻塞的读方式。
 
 		if (-1 == r) {
         		if (EINTR == errno)
@@ -94,7 +95,7 @@ static void capture_thread(struct camera *cam)	//视频采集线程
         		fprintf (stderr, "select timeout\n");
         		exit (EXIT_FAILURE);
 		}
-
+		//-如果设备可读那么select就会返回1,从而执行read_frame(cam),进行视频数据的读取。
 		if (read_frame (cam))
             		gdk_threads_leave();
 		/* EAGAIN - continue select loop. */
@@ -105,11 +106,11 @@ static void capture_thread(struct camera *cam)	//视频采集线程
 
 static void gtk_window_init(int argc, char **argv, struct camera *cam)
 {
-	if(!g_thread_supported()) {
-		g_thread_init(NULL);
+	if(!g_thread_supported()) {	//如果gthread没有被初始化
+		g_thread_init(NULL);	 //进行初始化
 	}
 
-	gdk_threads_init();
+	gdk_threads_init();	//初始化GDK多线程，这样可以在多线程中使用成对的gdk_threads_enter()和gdk_thread_leave(),在Gtk程序保证          gdk_threads_init()在main loop执行之前执行，为了保证线程安全应该在gtk_init()之前调用，g_thread_init()必须在函数gdk_threads_init()之前执行。
 
 	gtk_init (&argc, &argv);
 
@@ -156,12 +157,13 @@ int main(int argc, char **argv)
 	cam->width = 320;	//我的摄像头质量比较差，最大分辨率只有320*240
 	cam->height = 240;
 	cam->display_depth = 3;  /* RGB24 */
-	cam->rgbbuf = malloc(cam->width * cam->height * cam->display_depth);
+	cam->rgbbuf = malloc(cam->width * cam->height * cam->display_depth);	//-提取出来的纯数据就放在这里
 
 	if (!cam->rgbbuf) {
 		printf("malloc rgbbuf failure!\n");
 		exit(1);
 	}
+#ifdef RUN_CAM
 	open_camera(cam);	//打开设备
 	//-get_cam_cap(cam);	//得到设备信息，如果定义了DEBUG_CAM，则会打印视频信息
 	//-get_cam_pic(cam);	//得到图形信息，同样如果定义了DEBUG_CAM，则会打印信息  
@@ -172,13 +174,15 @@ int main(int argc, char **argv)
 	//-get_cam_win(cam);	//显示设置之后的视频显示信息，确定设置成功
         init_camera(cam);	//初始化设备，这个函数包括很多有关v4l2的操作 
         start_capturing (cam);	//打开视频采集 
-
+#endif
 	gtk_window_init(argc,argv,cam);	//初始化图形显示
 	//建立线程 
 	g_thread_create((GThreadFunc)draw_thread, drawingarea, FALSE, NULL);
+#ifdef RUN_CAM	
 	g_thread_create((GThreadFunc)capture_thread, cam, FALSE, NULL);
+#endif
 
-	gdk_threads_enter();
+	gdk_threads_enter();	//-是一宏定义，占领临界区，这样使Gdk和Gtk+函数在多线程中被安全的调用而不会造成竞争条件，保证数据安全，一次只能有一线程访问临界区。
 	gtk_main();	//进入主循环之后，两个线程开始工作
 	gdk_threads_leave();
   	return 0;
@@ -187,15 +191,15 @@ int main(int argc, char **argv)
 static gboolean on_darea_expose (GtkWidget *widget,
                  GdkEventExpose *event,
                  gpointer user_data)
-{      
+{
 	struct camera *cam;
 
 	cam = (struct camera *)(user_data); 
-        gdk_draw_rgb_image (widget->window, widget->style->fg_gc[GTK_STATE_NORMAL],
+	gdk_draw_rgb_image (widget->window, widget->style->fg_gc[GTK_STATE_NORMAL],
                 	0, 0, cam->width, cam->height,
                      	GDK_RGB_DITHER_MAX, cam->rgbbuf, cam->width * cam->display_depth);
 	image_ready = 0;
-        return 1;
+	return 1;
 }
 
 static gboolean quit_capture(GtkWidget *widget,

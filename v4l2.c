@@ -68,14 +68,14 @@ void close_camera(struct camera *cam)
 }
 int read_frame(struct camera *cam)
 {
-        struct v4l2_buffer buf;
+	struct v4l2_buffer buf;
 
-	CLEAR (buf);
+	CLEAR (buf);	//这是自定义的一个宏，调用memset对内存清零  
 
-        buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        buf.memory = V4L2_MEMORY_MMAP;
-	if (quit_flag == 0) {
-        	if (-1 == xioctl (cam->fd, VIDIOC_DQBUF, &buf)) {
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_MMAP;
+	if (quit_flag == 0) {	//-正常都是等于0的,当窗口退出时等于1
+		if (-1 == xioctl (cam->fd, VIDIOC_DQBUF, &buf)) {	//-从缓冲区取出一个缓冲帧
             		switch (errno) {
             		case EAGAIN:
                 	return 0;
@@ -91,12 +91,12 @@ int read_frame(struct camera *cam)
 		}
 	}
 
-        assert (buf.index < n_buffers);
+	assert (buf.index < n_buffers);	//-assert的作用是先计算表达式expr，如果其值为假（即为0），那么它会打印出来assert的内容和__FILE__, __LINE__, __ASSERT_FUNCTION，然后执行abort()函数使kernel杀掉自己并coredump（是否生成coredump文件，取决于系统配置）；否则，assert()无任何作用。
 
 	process_image (cam->buffers[buf.index].start, cam);
 
 	if (quit_flag == 0) {
-		if (-1 == xioctl (cam->fd, VIDIOC_QBUF, &buf))
+		if (-1 == xioctl (cam->fd, VIDIOC_QBUF, &buf))	//-放回队列中就可以再次获取到数据了
 			errno_exit ("VIDIOC_QBUF");
 	}
 	return 1;
